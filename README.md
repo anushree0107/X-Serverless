@@ -16,8 +16,7 @@ Before you begin, ensure you have the following installed:
 X-Serverless/
 ├── api/            # Python FastAPI backend
 ├── frontend/       # JavaScript frontend
-├── public/         # Static assets
-└── docker/         # Docker configuration files
+
 ```
 
 ## Getting Started
@@ -45,7 +44,7 @@ source venv/bin/activate
 pip install -r requirements.txt
 
 # Start the Uvicorn server
-uvicorn main:app --reload --host 0.0.0.0 --port 8000
+uvicorn app:app --reload --host 0.0.0.0 --port 8000
 ```
 
 The API will be available at `http://localhost:8000`
