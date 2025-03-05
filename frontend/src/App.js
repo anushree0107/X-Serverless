@@ -50,7 +50,6 @@ function App() {
     return <div className="loading">Loading user data...</div>;
   }
 
-  // Format current date and time in UTC
   const currentDateTime = new Date().toISOString()
     .replace('T', ' ')
     .substring(0, 19);
@@ -81,10 +80,7 @@ function App() {
       </main>
       
       <footer className="app-footer">
-        <div className="system-info">
-          <span>Current Date and Time (UTC - YYYY-MM-DD HH:MM:SS formatted): {currentDateTime}</span>
-          <span>Current User's Login: {user ? user.username : 'Not logged in'}</span>
-        </div>
+       
       </footer>
     </div>
   );

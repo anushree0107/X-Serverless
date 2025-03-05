@@ -22,8 +22,8 @@ const Dashboard = ({ user, onLogout }) => {
   });
   const [userFunctions, setUserFunctions] = useState([]);
   const [currentDateTime, setCurrentDateTime] = useState(new Date().toISOString().replace('T', ' ').substring(0, 19));
+  const [showVerificationReminder, setShowVerificationReminder] = useState(false);
 
-  // Update date time every second
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentDateTime(new Date().toISOString().replace('T', ' ').substring(0, 19));
@@ -31,28 +31,22 @@ const Dashboard = ({ user, onLogout }) => {
     return () => clearInterval(timer);
   }, []);
 
-  // Fetch verification status and other user data
   const fetchUserData = useCallback(async () => {
     try {
-      // Get verification status first
       const verificationData = await checkVerification(user.username);
       setVerificationStatus(verificationData);
       
-      // Only proceed with other API calls if user is verified
       if (verificationData.verified) {
         try {
-          // Get usage stats
           const usageData = await getUserUsage(user.username);
           setUserStats(usageData);
           
-          // Get user's functions
           const functionsData = await getUserFunctions(user.username);
           setUserFunctions(functionsData);
         } catch (dataError) {
           console.error('Error fetching user additional data:', dataError);
         }
       } else {
-        // Reset the data if user is not verified
         setUserFunctions([]);
         setUserStats({
           python_functions: user.python_functions || 0,
@@ -63,7 +57,6 @@ const Dashboard = ({ user, onLogout }) => {
       }
     } catch (err) {
       console.error('Error fetching verification status:', err);
-      // If verification check fails, assume not verified
       setVerificationStatus({
         verified: false,
         remaining_minutes: 0
@@ -74,13 +67,11 @@ const Dashboard = ({ user, onLogout }) => {
   useEffect(() => {
     fetchUserData();
     
-    // Set up periodic refresh of verification status (every minute)
     const intervalId = setInterval(() => {
       checkVerification(user.username)
         .then(data => {
           setVerificationStatus(data);
           
-          // If user verification status changes to true, fetch the rest of the data
           if (data.verified) {
             Promise.all([
               getUserUsage(user.username).then(setUserStats).catch(console.error),
@@ -96,10 +87,17 @@ const Dashboard = ({ user, onLogout }) => {
     return () => clearInterval(intervalId);
   }, [fetchUserData, user.username]);
 
-  // Handle code execution result
   const handleCodeResult = (result) => {
     setOutput(result);
     fetchUserData(); // Refresh user data after code run
+  };
+  
+  // Function to handle verification notification
+  const handleExecuteAttemptWithoutVerification = () => {
+    setShowVerificationReminder(true);
+    setTimeout(() => {
+      setShowVerificationReminder(false);
+    }, 5000);
   };
 
   return (
@@ -207,6 +205,7 @@ const Dashboard = ({ user, onLogout }) => {
                 setLoading={setLoading}
                 isVerified={verificationStatus.verified}
                 previousFunctions={userFunctions.filter(f => f.language === activeTab)}
+                onUnverifiedExecuteAttempt={handleExecuteAttemptWithoutVerification}
               />
             </div>
           </div>
@@ -224,6 +223,23 @@ const Dashboard = ({ user, onLogout }) => {
         </div>
       </div>
       
+      {/* Verification Reminder Notification */}
+      {showVerificationReminder && (
+        <div className="verification-reminder">
+          <div className="reminder-content">
+            <span className="reminder-icon">⚠️</span>
+            <p>Verification required! Please complete OTP verification to execute code.</p>
+            <button 
+              className="reminder-close"
+              onClick={() => setShowVerificationReminder(false)}
+            >
+              &times;
+            </button>
+          </div>
+        </div>
+      )}
+      
+
     </div>
   );
 };

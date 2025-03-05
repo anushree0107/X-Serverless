@@ -16,6 +16,14 @@ import pytz
 
 IST = pytz.timezone('Asia/Kolkata')
 
+class OTPVerification(BaseModel):
+    otp: str
+
+class UserRegistration(BaseModel):
+    username: str
+    email: str
+    password: str
+
 async def check_verification_expired(user):
     """Check if user verification has expired (more than 30 minutes)"""
     if not user.verified or user.verified_at is None:

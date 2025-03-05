@@ -31,41 +31,54 @@ export const getAllUsers = async () => {
   }
 };
 
-// Register new user
-// Register new user
-export const registerUser = async (userData) => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/users`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          username: userData.username,
-          email: userData.email,
-          password_hash: userData.password  // This is the key issue - backend expects password_hash
-        }),
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.detail || 'Registration failed');
-      }
-      
-      const data = await response.json();
-      
-      if (data.status !== 'ok') {
-        throw new Error(data.message || 'Failed to register user');
-      }
-      
-      return data.data;
-    } catch (error) {
-      console.error('Error registering user:', error);
-      throw error;
-    }
-  };
 
-// Check verification status
+export const registerUser = async (userData) => {
+  try {
+    const currentTime = new Date().toISOString();
+    
+    const requestBody = {
+      username: userData.username,
+      email: userData.email,
+      password_hash: userData.password,
+      verified: false,
+      created_at: currentTime,
+      verified_at: currentTime,
+      python_functions: 0,
+      javascript_functions: 0,
+      cost: 0
+    };
+    
+    console.log('Sending registration data:', JSON.stringify(requestBody));
+    
+    const response = await fetch(`${API_BASE_URL}/users`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(requestBody),
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error('Registration error response:', errorData);
+      throw new Error(errorData.detail || 'Registration failed');
+    }
+    
+    const data = await response.json();
+    console.log('Registration success response:', data);
+    
+    if (data.status !== 'ok') {
+      throw new Error(data.message || 'Failed to register user');
+    }
+    
+    return data.data;
+  } catch (error) {
+    console.error('Error registering user:', error);
+    throw error;
+  }
+};
+
+
 export const checkVerification = async (username) => {
   try {
     const response = await fetch(`${API_BASE_URL}/users/${username}/verification-status`);
@@ -82,7 +95,6 @@ export const checkVerification = async (username) => {
   }
 };
 
-// Request OTP
 export const requestOTP = async (username, password) => {
   try {
     const response = await fetch(`${API_BASE_URL}/users/${username}/request-otp`, {
@@ -109,15 +121,17 @@ export const requestOTP = async (username, password) => {
 // Verify OTP
 export const verifyOTP = async (username, otp) => {
   try {
-    const response = await fetch(`${API_BASE_URL}/users/${username}/verify-otp`, {
+    const response = await fetch(`${API_BASE_URL}/users/${username}/verify-otp?otp=${encodeURIComponent(otp)}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ otp }),
+      }
     });
     
+    console.log('Verify OTP response:', response);
+    
     const data = await response.json();
+    console.log('OTP verification data:', data);
     
     if (response.status !== 200) {
       throw new Error(JSON.stringify(data));
